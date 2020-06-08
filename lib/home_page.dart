@@ -18,12 +18,10 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey();
-
-  bool _readOnly = true;
+  bool _readOnly;
   AllHandles _allHandles;
 
-  bool openSettings = false;
+  bool openSettings;
 
   File _image;
   ImageProvider widgetImage;
@@ -52,18 +50,13 @@ class _HomePageState extends State<HomePage> {
 
 
   void saveHandles() async{
-    UserConfig.setAllHandles(_allHandles);
+    UserConfig.saveAllHandles(_allHandles);
     UserConfig.saveName(userNameController.text);
     UserConfig.saveBio(bioController.text);
   }
 
-  void deleteHandle(int index) {
-    setState(() {
-      _allHandles.list.removeAt(index);
-    });
-  }
 
-  void getImageFromPref()async{
+  void getImageFromPref() async{
     final imageList = await UserConfig.getImage();
     if(imageList != null){
       widgetImage = MemoryImage(imageList);
@@ -123,6 +116,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    _readOnly = true;
+    openSettings = false;
     _allHandles = UserConfig.allHandles ?? SocialHandles.getInitialHandles();
     _allHandles.list.sort((a,b) => b.copiedCount.compareTo(a.copiedCount));
     userNameController.text = UserConfig.userName;
@@ -133,9 +128,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void dispose() {
+    userNameController.dispose();
+    bioController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: scaffoldKey,
       backgroundColor: Theme.of(context).backgroundColor,
       appBar: AppBar(
         title: Text('HANDY HANDLES', style: Theme.of(context).textTheme.headline1,),
@@ -172,9 +173,10 @@ class _HomePageState extends State<HomePage> {
                                     alignment: PlaceholderAlignment.middle,
                                     child: Switch(
                                       activeColor: Colors.blueAccent,
-                                      value: Provider.of<ThemeModeNotifier>(context).themeMode == 'dark' ? true : false,
+                                      value: Provider.of<ThemeModeNotifier>(context, listen: false).themeMode == 'dark' ? true : false,
                                       onChanged: (boolVal) {
                                         Provider.of<ThemeModeNotifier>(context, listen: false).setThemeModeData(boolVal ? 'dark' : 'light');
+                                        Navigator.of(context).pushReplacementNamed('/homePage');
                                       },
                                     )
                                 ),
@@ -186,9 +188,10 @@ class _HomePageState extends State<HomePage> {
                                     alignment: PlaceholderAlignment.middle,
                                     child: Switch(
                                       activeColor: Colors.blueAccent,
-                                      value: Provider.of<ThemeModeNotifier>(context).autoMode ? true : false,
+                                      value: Provider.of<ThemeModeNotifier>(context, listen: false).autoMode ? true : false,
                                       onChanged: (boolVal) {
                                         Provider.of<ThemeModeNotifier>(context, listen: false).setThemeModeData(boolVal ? 'auto' : 'light');
+                                        Navigator.of(context).pushReplacementNamed('/homePage');
                                       },
                                     )
                                 ),
@@ -345,153 +348,68 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: _readOnly ? null : BottomAppBar(
         shape: AutomaticNotchedShape(
-            StadiumBorder(),StadiumBorder()
+            ContinuousRectangleBorder()
         ),
         notchMargin: 4.0,
         elevation: 2.0,
         color: Theme.of(context).bottomAppBarColor,
         child: SizedBox(height: 30.0, width: double.maxFinite,),
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: 40.0, top: 8.0),
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          mainAxisSize: MainAxisSize.max,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-              child: Container(
-                height: 100.0,
-                width: 100.0,
-                padding: EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Theme.of(context).canvasColor,
-                    boxShadow: [
-                      BoxShadow(
-                          color: Theme.of(context).primaryColorDark,
-                          offset: Offset(2.0,2.0),
-                          blurRadius: 5.0,
-                          spreadRadius: 3.0
-                      ),
-                      BoxShadow(
-                          color: Theme.of(context).primaryColorLight,
-                          offset: Offset(-2.0,-2.0),
-                          blurRadius: 4.0,
-                          spreadRadius: 3.0
-                      ),
-                    ]
-                ),
-                child: GestureDetector(
-                  onTap: getImage,
+      body: Builder(
+        builder: (context){
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(bottom: 40.0, top: 8.0),
+            physics: BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
                   child: Container(
+                    height: 100.0,
+                    width: 100.0,
+                    padding: EdgeInsets.all(4.0),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: widgetImage != null ? DecorationImage(
-                        image: widgetImage,
-                        fit: BoxFit.cover,
-                      ) : null,
+                        shape: BoxShape.circle,
+                        color: Theme.of(context).canvasColor,
+                        boxShadow: [
+                          BoxShadow(
+                              color: Theme.of(context).primaryColorDark,
+                              offset: Offset(2.0,2.0),
+                              blurRadius: 5.0,
+                              spreadRadius: 3.0
+                          ),
+                          BoxShadow(
+                              color: Theme.of(context).primaryColorLight,
+                              offset: Offset(-2.0,-2.0),
+                              blurRadius: 4.0,
+                              spreadRadius: 3.0
+                          ),
+                        ]
                     ),
-                    child: widgetImage == null ? Icon(Icons.person, color: Theme.of(context).textTheme.headline2.color,) : null,
-                  ),
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                String val = userNameController.text;
-                Clipboard.setData(ClipboardData(text: val));
-                if(val != '') {
-                  scaffoldKey.currentState.showSnackBar(
-                      SnackBar(
-                        shape: StadiumBorder(),
-                        content: Text('Copied $val'),
-                        duration: Duration(seconds: 1),
-                        backgroundColor: Color(0xff33383e),
-                        behavior: SnackBarBehavior.floating,
-                      )
-                  );
-                }
-              },
-              child: AbsorbPointer(
-                absorbing: _readOnly,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: TextField(
-                    enableInteractiveSelection: false,
-                    enabled: !_readOnly,
-                    readOnly: _readOnly,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.headline2,
-                    controller: userNameController,
-                    decoration: InputDecoration.collapsed(
-                        hintText: 'Your Name',
-                        hintStyle: Theme.of(context).textTheme.headline2
+                    child: GestureDetector(
+                      onTap: getImage,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: widgetImage != null ? DecorationImage(
+                            image: widgetImage,
+                            fit: BoxFit.cover,
+                          ) : null,
+                        ),
+                        child: widgetImage == null ? Icon(Icons.person, color: Theme.of(context).textTheme.headline2.color,) : null,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            GestureDetector(
-              onTap: (){
-                String val = bioController.text;
-                Clipboard.setData(ClipboardData(text: val));
-                if(val != '') {
-                  scaffoldKey.currentState.showSnackBar(
-                      SnackBar(
-                        shape: StadiumBorder(),
-                        content: Text('Copied $val'),
-                        duration: Duration(seconds: 1),
-                        backgroundColor: Color(0xff33383e),
-                        behavior: SnackBarBehavior.floating,
-                      )
-                  );
-                }
-              },
-              child: AbsorbPointer(
-                absorbing: _readOnly,
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  child: TextField(
-                    enableInteractiveSelection: false,
-                    enabled: !_readOnly,
-                    readOnly: _readOnly,
-                    textAlign: TextAlign.center,
-                    controller: bioController,
-                    style: Theme.of(context).textTheme.headline3,
-                    decoration: InputDecoration.collapsed(
-                        hintText: 'Biography',
-                        hintStyle: Theme.of(context).textTheme.headline3
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Divider(
-                indent: 25.0,
-                endIndent: 20.0,
-                thickness: 1.0,
-                color: Theme.of(context).textTheme.headline2.color.withOpacity(0.5),
-              ),
-            ),
-            ListView.builder(
-              primary: false,
-              shrinkWrap: true,
-              physics: BouncingScrollPhysics(),
-              itemCount: _allHandles.list?.length,
-              itemBuilder: (_,index){
-                return GestureDetector(
+                GestureDetector(
                   onTap: (){
-                    String val = _allHandles.list[index].value;
+                    String val = userNameController.text;
                     Clipboard.setData(ClipboardData(text: val));
                     if(val != '') {
-                      _allHandles.list[index].copiedCount = (_allHandles.list[index].copiedCount ?? 0) + 1;
-                      saveHandles();
-                      scaffoldKey.currentState.showSnackBar(
+                      Scaffold.of(context).showSnackBar(
                           SnackBar(
                             shape: StadiumBorder(),
                             content: Text('Copied $val'),
@@ -504,28 +422,119 @@ class _HomePageState extends State<HomePage> {
                   },
                   child: AbsorbPointer(
                     absorbing: _readOnly,
-                    child: Dismissible(
-                      key: UniqueKey(),
-                      onDismissed: (d){
-                        deleteHandle(index);
-                      },
-                      child: HandleInputField(
-                        key: ValueKey(index),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        enableInteractiveSelection: false,
+                        enabled: !_readOnly,
                         readOnly: _readOnly,
-                        iconFileName: _allHandles.list[index].iconFileName,
-                        handleName: _allHandles.list[index].handleHintText,
-                        initialValue: _allHandles.list[index].value,
-                        onTextChanged: (s){
-                          _allHandles.list[index].value = s;
-                        },
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headline2,
+                        controller: userNameController,
+                        decoration: InputDecoration.collapsed(
+                            hintText: 'Your Name',
+                            hintStyle: Theme.of(context).textTheme.headline2
+                        ),
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+                GestureDetector(
+                  onTap: (){
+                    String val = bioController.text;
+                    Clipboard.setData(ClipboardData(text: val));
+                    if(val != '') {
+                      Scaffold.of(context).showSnackBar(
+                          SnackBar(
+                            shape: StadiumBorder(),
+                            content: Text('Copied $val'),
+                            duration: Duration(seconds: 1),
+                            backgroundColor: Color(0xff33383e),
+                            behavior: SnackBarBehavior.floating,
+                          )
+                      );
+                    }
+                  },
+                  child: AbsorbPointer(
+                    absorbing: _readOnly,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        enableInteractiveSelection: false,
+                        enabled: !_readOnly,
+                        readOnly: _readOnly,
+                        textAlign: TextAlign.center,
+                        controller: bioController,
+                        style: Theme.of(context).textTheme.headline3,
+                        decoration: InputDecoration.collapsed(
+                            hintText: 'Biography',
+                            hintStyle: Theme.of(context).textTheme.headline3
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Divider(
+                    indent: 25.0,
+                    endIndent: 20.0,
+                    thickness: 1.0,
+                    color: Theme.of(context).textTheme.headline2.color.withOpacity(0.5),
+                  ),
+                ),
+                ListView.builder(
+                  primary: false,
+                  shrinkWrap: true,
+                  physics: BouncingScrollPhysics(),
+                  itemCount: _allHandles.list?.length,
+                  itemBuilder: (_,index){
+                    return GestureDetector(
+                      onTap: (){
+                        String val = _allHandles.list[index].value;
+                        Clipboard.setData(ClipboardData(text: val));
+                        if(val != '') {
+                          _allHandles.list[index].copiedCount = (_allHandles.list[index].copiedCount ?? 0) + 1;
+                          saveHandles();
+                          Scaffold.of(context).showSnackBar(
+                              SnackBar(
+                                shape: StadiumBorder(),
+                                content: Text('Copied $val'),
+                                duration: Duration(seconds: 1),
+                                backgroundColor: Color(0xff33383e),
+                                behavior: SnackBarBehavior.floating,
+                              )
+                          );
+                        }
+                      },
+                      child: AbsorbPointer(
+                        absorbing: _readOnly,
+                        child: Dismissible(
+                          key: UniqueKey(),
+                          onDismissed: (d){
+                            setState(() {
+                              _allHandles.list.removeAt(index);
+                              UserConfig.saveAllHandles(_allHandles);
+                            });
+                          },
+                          child: HandleInputField(
+                            readOnly: _readOnly,
+                            iconFileName: _allHandles.list[index].iconFileName,
+                            handleName: _allHandles.list[index].handleHintText,
+                            initialValue: _allHandles.list[index].value,
+                            onTextChanged: (s){
+                              _allHandles.list[index].value = s;
+                            },
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -553,6 +562,12 @@ class _HandleInputFieldState extends State<HandleInputField> {
   void initState() {
     _textEditingController.text = widget.initialValue ?? '';
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _textEditingController.dispose();
+    super.dispose();
   }
 
   @override
@@ -591,7 +606,7 @@ class _HandleInputFieldState extends State<HandleInputField> {
             Expanded(
               child: TextField(
                 enableInteractiveSelection: false,
-                enabled: !widget.readOnly,
+//                enabled: !widget.readOnly,  //Might pose problem of automatic closing and opening of keyboard
                 readOnly: widget.readOnly,
                 controller: _textEditingController,
                 onChanged: (s) => widget.onTextChanged(s),

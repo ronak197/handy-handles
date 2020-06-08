@@ -27,16 +27,13 @@ void main() async {
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeModeNotifier>(
-      builder: (context, appState, child){
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: HomePage(),
-          themeMode: appState.themeMode == 'dark' ? ThemeMode.dark : ThemeMode.light,
-          darkTheme: AppTheme.darkThemeData,
-          theme: AppTheme.lightThemeData,
-        );
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/homePage',
+      routes: {
+        '/homePage' : (context) => HomePage()
       },
+      theme: Provider.of<ThemeModeNotifier>(context).themeMode == 'dark' ? AppTheme.darkThemeData : AppTheme.lightThemeData,
     );
   }
 }

@@ -45,7 +45,7 @@ class UserConfig{
     }
   }
 
-  static setAllHandles(AllHandles allHandles){
+  static saveAllHandles(AllHandles allHandles){
     AppConfigurations.prefs.setString('allHandles', jsonEncode(allHandles));
   }
 
