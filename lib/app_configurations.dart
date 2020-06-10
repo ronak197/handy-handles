@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppConfigurations{
@@ -86,12 +87,14 @@ class Handle {
   String iconFileName;
   String handleHintText;
   int copiedCount;
+  String key;
 
   Handle({
     this.value,
     this.iconFileName,
     this.handleHintText,
     this.copiedCount,
+    this.key
   });
 
   factory Handle.fromJson(Map<String, dynamic> json) => Handle(
@@ -99,6 +102,7 @@ class Handle {
     iconFileName: json["iconFileName"],
     handleHintText: json["handleHintText"],
     copiedCount: json["copiedCount"],
+    key: json["key"]
   );
 
   Map<String, dynamic> toJson() => {
@@ -106,6 +110,7 @@ class Handle {
     "iconFileName": iconFileName,
     "handleHintText": handleHintText,
     "copiedCount": copiedCount,
+    "key": key
   };
 }
 
@@ -167,31 +172,36 @@ class SocialHandles{
           copiedCount: -1,
           iconFileName: 'youtube',
           handleHintText: 'YOUTUBE',
-          value: ''
+          value: '',
+          key: UniqueKey().toString()
       ),
       Handle(
           copiedCount: -1,
           iconFileName: 'facebook',
           handleHintText: 'FACEBOOK',
-          value: ''
+          value: '',
+          key: UniqueKey().toString()
       ),
       Handle(
           copiedCount: -1,
           iconFileName: 'pinterest',
           handleHintText: 'PINTEREST',
-          value: ''
+          value: '',
+          key: UniqueKey().toString()
       ),
       Handle(
           copiedCount: -1,
           iconFileName: 'snapchat',
           handleHintText: 'SNAPCHAT',
-          value: ''
+          value: '',
+          key: UniqueKey().toString()
       ),
       Handle(
           copiedCount: -1,
           iconFileName: 'twitter',
           handleHintText: 'TWITTER',
-          value: ''
+          value: '',
+          key: UniqueKey().toString()
       ),
     ];
   }

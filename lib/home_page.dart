@@ -32,7 +32,6 @@ class _HomePageState extends State<HomePage> {
 
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
-
     setState(() {
       _image = File(pickedFile.path);
       widgetImage = FileImage(_image);
@@ -54,7 +53,6 @@ class _HomePageState extends State<HomePage> {
     UserConfig.saveName(userNameController.text);
     UserConfig.saveBio(bioController.text);
   }
-
 
   void getImageFromPref() async{
     final imageList = await UserConfig.getImage();
@@ -326,10 +324,11 @@ class _HomePageState extends State<HomePage> {
                             onTap: (){
                               _allHandles.list.add(
                                   Handle(
-                                      value: '',
-                                      iconFileName: SocialHandles.handleNames[index],
-                                      handleHintText: SocialHandles.handleNames[index],
-                                      copiedCount: -1
+                                    value: '',
+                                    iconFileName: SocialHandles.handleNames[index],
+                                    handleHintText: SocialHandles.handleNames[index],
+                                    copiedCount: -1,
+                                    key: UniqueKey().toString()
                                   )
                               );
                               setState(() {
@@ -428,6 +427,7 @@ class _HomePageState extends State<HomePage> {
                         enableInteractiveSelection: false,
                         enabled: !_readOnly,
                         readOnly: _readOnly,
+                        autofocus: false,
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headline2,
                         controller: userNameController,
@@ -463,6 +463,7 @@ class _HomePageState extends State<HomePage> {
                         enableInteractiveSelection: false,
                         enabled: !_readOnly,
                         readOnly: _readOnly,
+                        autofocus: false,
                         textAlign: TextAlign.center,
                         controller: bioController,
                         style: Theme.of(context).textTheme.headline3,
@@ -510,11 +511,10 @@ class _HomePageState extends State<HomePage> {
                       child: AbsorbPointer(
                         absorbing: _readOnly,
                         child: Dismissible(
-                          key: UniqueKey(),
+                          key: Key(_allHandles.list[index].key),
                           onDismissed: (d){
                             setState(() {
                               _allHandles.list.removeAt(index);
-                              UserConfig.saveAllHandles(_allHandles);
                             });
                           },
                           child: HandleInputField(
@@ -542,14 +542,13 @@ class _HomePageState extends State<HomePage> {
 
 class HandleInputField extends StatefulWidget {
 
-  Key key;
   bool readOnly;
   String iconFileName;
   String handleName;
   String initialValue;
   Function(String) onTextChanged;
 
-  HandleInputField({this.key,this.readOnly, this.iconFileName, this.handleName, this.onTextChanged, this.initialValue});
+  HandleInputField({this.readOnly, this.iconFileName, this.handleName, this.onTextChanged, this.initialValue});
   @override
   _HandleInputFieldState createState() => _HandleInputFieldState();
 }
@@ -606,7 +605,8 @@ class _HandleInputFieldState extends State<HandleInputField> {
             Expanded(
               child: TextField(
                 enableInteractiveSelection: false,
-//                enabled: !widget.readOnly,  //Might pose problem of automatic closing and opening of keyboard
+                enabled: !widget.readOnly,
+                autofocus: false,
                 readOnly: widget.readOnly,
                 controller: _textEditingController,
                 onChanged: (s) => widget.onTextChanged(s),
